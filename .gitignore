@@ -1,0 +1,10 @@
+# Environments
+venv/
+__pycache__/
+
+# Databases and ML Models
+data/*.db
+data/*.pkl
+
+# OS generated files
+.DS_Store
