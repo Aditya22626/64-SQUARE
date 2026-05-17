@@ -26,7 +26,7 @@ const io = new Server(httpServer, {
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? false : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: process.env.NODE_ENV === 'production' ? false : ['http://localhost:3000', 'https://64-square.vercel.app'],
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
