@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, Swords, History, Brain, LogOut, Menu, X, Trophy, ChevronRight } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { Home, Swords, History, Brain, LogOut, Menu, X, Trophy, ChevronRight, Sun, Moon } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home', exact: true },
@@ -12,6 +13,7 @@ const navItems = [
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -77,8 +79,32 @@ export default function Layout() {
           )}
         </nav>
 
-        {/* User profile */}
-        <div className="border-t border-chess-border p-3">
+        {/* Theme toggle + User profile */}
+        <div className="border-t border-chess-border p-3 space-y-2">
+          {/* Theme toggle button */}
+          <button
+            onClick={toggleTheme}
+            title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm
+              ${isDark
+                ? 'text-slate-400 hover:text-chess-gold hover:bg-chess-card border border-transparent hover:border-chess-border'
+                : 'text-slate-500 hover:text-chess-accent hover:bg-chess-card border border-transparent hover:border-chess-border'
+              }`}
+          >
+            {isDark
+              ? <><Sun size={16} className="flex-shrink-0 text-chess-gold" />{sidebarOpen && <span>Light Mode</span>}</>
+              : <><Moon size={16} className="flex-shrink-0 text-chess-accent" />{sidebarOpen && <span>Dark Mode</span>}</>
+            }
+            {sidebarOpen && (
+              <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                isDark ? 'bg-chess-gold/20 text-chess-gold' : 'bg-chess-accent/20 text-chess-accent'
+              }`}>
+                {isDark ? '☀' : '🌙'}
+              </span>
+            )}
+          </button>
+
+          {/* User profile */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
               <span className="text-white text-sm font-bold">{user?.username?.[0]?.toUpperCase()}</span>

@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* ── Dark theme (default) ── */
+:root,
+[data-theme="dark"] {
   --chess-dark: #0a0a0f;
   --chess-panel: #12121a;
   --chess-card: #1a1a2e;
@@ -10,6 +12,35 @@
   --chess-accent: #6366f1;
   --chess-gold: #f59e0b;
   --chess-green: #10b981;
+  --chess-text: #e2e8f0;
+  --chess-text-muted: #64748b;
+  --chess-text-subtle: #94a3b8;
+  --chess-shadow: rgba(0,0,0,0.5);
+  --chess-board-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.2);
+  --chess-scrollbar-track: #12121a;
+  --chess-scrollbar-thumb: #2a2a4a;
+  --chess-glass: rgba(26,26,46,0.6);
+  --chess-glass-border: rgba(42,42,74,0.8);
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  --chess-dark: #f0f2f8;
+  --chess-panel: #ffffff;
+  --chess-card: #f8f9ff;
+  --chess-border: #dde1f0;
+  --chess-accent: #6366f1;
+  --chess-gold: #d97706;
+  --chess-green: #059669;
+  --chess-text: #1e293b;
+  --chess-text-muted: #64748b;
+  --chess-text-subtle: #94a3b8;
+  --chess-shadow: rgba(0,0,0,0.12);
+  --chess-board-shadow: 0 25px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(99,102,241,0.15);
+  --chess-scrollbar-track: #f0f2f8;
+  --chess-scrollbar-thumb: #dde1f0;
+  --chess-glass: rgba(255,255,255,0.7);
+  --chess-glass-border: rgba(221,225,240,0.9);
 }
 
 * {
@@ -19,23 +50,24 @@
 body {
   margin: 0;
   background: var(--chess-dark);
-  color: #e2e8f0;
+  color: var(--chess-text);
   font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--chess-panel); }
-::-webkit-scrollbar-thumb { background: var(--chess-border); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--chess-scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--chess-scrollbar-thumb); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--chess-accent); }
 
-/* Chess board enhancements */
+/* Chess board */
 .chess-board-wrapper {
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.2);
+  box-shadow: var(--chess-board-shadow);
 }
 
 /* Move classification colors */
@@ -59,9 +91,9 @@ body {
 
 /* Glass effect */
 .glass {
-  background: rgba(26, 26, 46, 0.6);
+  background: var(--chess-glass);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(42, 42, 74, 0.8);
+  border: 1px solid var(--chess-glass-border);
 }
 
 /* Board highlight squares */
@@ -106,31 +138,23 @@ body {
 }
 
 /* Glow effects */
-.glow-indigo {
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-}
+.glow-indigo { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+.glow-gold   { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+.glow-green  { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
 
-.glow-gold {
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
-}
-
-.glow-green {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-}
-
-/* Move list scrollable area */
+/* Move list */
 .move-list {
   max-height: 300px;
   overflow-y: auto;
 }
 
-/* Evaluation bar */
+/* Eval bar */
 .eval-bar-container {
   width: 16px;
   height: 100%;
   border-radius: 8px;
   overflow: hidden;
-  background: #1a1a2e;
+  background: var(--chess-card);
   position: relative;
 }
 
@@ -142,7 +166,7 @@ body {
   transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Notification badge */
+/* Badge */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -169,16 +193,44 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #64748b;
+  color: var(--chess-text-muted);
   border-bottom: 1px solid var(--chess-border);
 }
 
 .chess-table td {
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(42, 42, 74, 0.4);
+  border-bottom: 1px solid var(--chess-border);
   font-size: 13px;
+  color: var(--chess-text);
 }
 
 .chess-table tr:hover td {
   background: rgba(99, 102, 241, 0.05);
 }
+
+/* Light theme text overrides for Tailwind classes that use hardcoded colors */
+[data-theme="light"] .text-slate-400 { color: #64748b !important; }
+[data-theme="light"] .text-slate-500 { color: #475569 !important; }
+[data-theme="light"] .text-slate-600 { color: #374151 !important; }
+[data-theme="light"] .text-slate-300 { color: #374151 !important; }
+[data-theme="light"] .text-white     { color: #1e293b !important; }
+[data-theme="light"] .bg-chess-dark  { background-color: var(--chess-dark) !important; }
+[data-theme="light"] .bg-chess-panel { background-color: var(--chess-panel) !important; }
+[data-theme="light"] .bg-chess-card  { background-color: var(--chess-card) !important; }
+[data-theme="light"] .border-chess-border { border-color: var(--chess-border) !important; }
+
+/* Theme toggle transition */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+/* But don't slow down transforms/animations */
+.chess-board-wrapper *, button, [class*="animate"] {
+  transition: none;
+}
+button {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+/* Premove highlight */
+.premove-from { background-color: rgba(245, 158, 11, 0.5) !important; }
+.premove-to   { background-color: rgba(245, 158, 11, 0.65) !important; }

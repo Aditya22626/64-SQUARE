@@ -82,6 +82,8 @@ export default function GamePage() {
   const [legalMoveSquares, setLegalMoveSquares] = useState({});
   const [viewingMoveIdx, setViewingMoveIdx] = useState(-1);
   const [allPositions, setAllPositions] = useState([]);
+  // Premove: queued move to execute when it becomes the player's turn
+  const [premove, setPremove] = useState(null); // { from, to, promo }
 
   const moveListRef = useRef(null);
   const gameRef = useRef(null);
@@ -186,7 +188,16 @@ export default function GamePage() {
           setEvaluation(res.data.evaluation || 0);
           setViewingMoveIdx(-1);
           await gamesAPI.saveMove(gameId, md);
-          checkGameOver();
+          if (checkGameOver()) return;
+          // Fire queued premove now that it's the player's turn
+          setPremove(pending => {
+            if (pending) {
+              setTimeout(() => {
+                execMove(pending.from, pending.to, pending.promo || 'q');
+              }, 80);
+            }
+            return null;
+          });
         }
       }
     } catch (err) { console.error('AI error:', err); }
@@ -197,6 +208,8 @@ export default function GamePage() {
     setSelectedSquare(null);
     setLegalMoveSquares({});
   };
+
+  const clearPremove = () => setPremove(null);
 
   const getLegalSquaresFor = (square) => {
     const legalMoves = chess.moves({ square, verbose: true });
@@ -238,7 +251,54 @@ export default function GamePage() {
     } catch { return false; }
   };
 
+  // Allow queuing a premove when it's the opponent's turn (AI mode only)
+  const canPremove = () => {
+    if (isViewingHistory || gameOver || promotionPending) return false;
+    if (game?.mode !== 'ai') return false; // premove only vs AI
+    const turn = chess.turn() === 'w' ? 'white' : 'black';
+    return turn !== playerColor; // it's opponent's turn
+  };
+
   const onSquareClick = useCallback((square) => {
+    // If it's opponent's turn, handle premove logic
+    if (canPremove()) {
+      if (selectedSquare) {
+        // Second click — set the premove
+        const piece = chess.get(selectedSquare);
+        if (piece && piece.color === (playerColor === 'white' ? 'w' : 'b')) {
+          // Validate loosely: piece belongs to player
+          if (square !== selectedSquare) {
+            setPremove({ from: selectedSquare, to: square, promo: 'q' });
+            clearSelection();
+            return;
+          }
+        }
+        clearSelection();
+        return;
+      }
+      // First click — select own piece for premove
+      const piece = chess.get(square);
+      const myColor = playerColor === 'white' ? 'w' : 'b';
+      if (piece && piece.color === myColor) {
+        setSelectedSquare(square);
+        // Show premove destinations (grey dots) — all squares except own pieces
+        const allSquares = {};
+        'abcdefgh'.split('').forEach(file => {
+          '12345678'.split('').forEach(rank => {
+            const sq = file + rank;
+            const target = chess.get(sq);
+            if (sq !== square && !(target && target.color === myColor)) {
+              allSquares[sq] = target
+                ? { background: 'radial-gradient(circle, rgba(245,158,11,0.45) 65%, transparent 65%)', borderRadius: '0' }
+                : { background: 'radial-gradient(circle, rgba(245,158,11,0.55) 28%, transparent 28%)', borderRadius: '0' };
+            }
+          });
+        });
+        setLegalMoveSquares(allSquares);
+      }
+      return;
+    }
+
     if (!canInteract()) { clearSelection(); return; }
     if (selectedSquare) {
       if (legalMoveSquares[square] !== undefined) {
@@ -336,6 +396,12 @@ export default function GamePage() {
     if (highlightFrom) h[highlightFrom] = { ...(h[highlightFrom]||{}), backgroundColor: 'rgba(99,102,241,0.35)' };
     if (highlightTo)   h[highlightTo]   = { ...(h[highlightTo]||{}),   backgroundColor: 'rgba(99,102,241,0.50)' };
     if (selectedSquare) h[selectedSquare] = { ...(h[selectedSquare]||{}), backgroundColor: 'rgba(99,102,241,0.65)' };
+
+    // Premove highlights (amber/gold)
+    if (premove) {
+      h[premove.from] = { ...(h[premove.from]||{}), backgroundColor: 'rgba(245,158,11,0.5)' };
+      h[premove.to]   = { ...(h[premove.to]||{}),   backgroundColor: 'rgba(245,158,11,0.65)' };
+    }
     if (!isViewingHistory && chess.isCheck()) {
       chess.board().forEach((row, r) => row.forEach((p, f) => {
         if (p?.type === 'k' && p.color === chess.turn())
@@ -570,10 +636,17 @@ export default function GamePage() {
             <div className="text-xs text-center text-slate-500 mb-0.5">
               {isViewingHistory ? '📖 Reviewing history' :
                aiThinking ? '🤖 AI thinking…' :
+               premove ? '⚡ Premove queued' :
                isMyTurn ? '⚡ Your turn' :
                game?.mode === 'human' ? `⚡ ${activePlayer2P}'s turn` : '⏳ Opponent…'}
             </div>
             <div className="text-center text-xs text-slate-600 mb-1">Click piece · dots = legal moves</div>
+            {premove && (
+              <button onClick={clearPremove}
+                className="w-full flex items-center justify-center gap-2 bg-chess-gold/10 hover:bg-chess-gold/20 text-chess-gold border border-chess-gold/20 rounded-xl py-2 text-xs font-medium transition-colors">
+                ✕ Cancel Premove ({premove.from}→{premove.to})
+              </button>
+            )}
             {game?.mode === 'human' && (
               <button onClick={() => setBoardFlipped(f => !f)}
                 className="w-full flex items-center justify-center gap-2 bg-chess-card hover:bg-chess-border text-slate-300 border border-chess-border rounded-xl py-2 text-xs font-medium transition-colors">

@@ -123,8 +123,17 @@ export const selectMove = async (fen, difficulty, gameId, moveHistory = []) => {
         : moves[Math.floor(Math.random() * moves.length)];
     }
   } else {
-    // Exploit: use minimax depth based on difficulty
-    const depth = difficulty <= 3 ? 1 : difficulty <= 5 ? 2 : difficulty <= 7 ? 3 : 4;
+    // Depth AND time limit scale with difficulty — keeps all levels snappy
+    const depth     = difficulty <= 2 ? 1
+                    : difficulty <= 4 ? 2
+                    : difficulty <= 6 ? 3
+                    : difficulty <= 8 ? 3
+                    : 4;
+    const timeLimit = difficulty <= 2 ?  300
+                    : difficulty <= 4 ?  600
+                    : difficulty <= 6 ?  900
+                    : difficulty <= 8 ? 1200
+                    : 1500; // max 1.5s even at level 10 via iterative deepening
 
     // FIX: normalize qTable to Map before any .get() calls
     if (model.qTable && !(model.qTable instanceof Map)) {
@@ -148,7 +157,7 @@ export const selectMove = async (fen, difficulty, gameId, moveHistory = []) => {
     if (useQTable && Math.random() < 0.4) {
       selectedMove = bestQMove;
     } else {
-      const result = findBestMove(fen, depth);
+      const result = findBestMove(fen, depth, timeLimit); // pass timeLimit
       selectedMove = result?.move || moves[0];
     }
   }
